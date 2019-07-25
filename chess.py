@@ -1,10 +1,12 @@
 
 
 """
-Knight Traversal Chess Board Function:
+Chess Traversal Chess Board Function:
 
-Calculates shortest distance knight must traverse on chess board
+Calculates shortest distance piece must traverse on chess board
  to get from start to stop position, constrained by occupied positions.
+ Currently only configured for knights.
+
  Note: solutions are not unique! Alternative minimal paths
  exist between any two given points.
 
@@ -16,6 +18,8 @@ Parameters:
   occupied_spaces=['start', positions] (str): inaccessible positions on chess board.
       'start' indicates default starting positions for black side pieces.
 
+  piece='knight' (str): piece being moved. Currently only configured for knight.
+    
 Output:
 
   (str) Moves traversed from start point to end without landing on occupied spaces,
@@ -26,7 +30,7 @@ Author:
     Written 7/2019
 """
 
-def move(positions, occupied_spaces=None):
+def move(positions, occupied_spaces=None, piece='knight'):
     import pandas as pd
     import re
     
@@ -70,7 +74,7 @@ def move(positions, occupied_spaces=None):
             # All possible moves of a knight from a given position,
             #  including boundaries of chess board, and ignoring occupied positions and
             #  already traversed positions.
-            self.children=generate_moves(self.node, self.forbidden_nodes, 'knight')
+            self.children=generate_moves(self.node, self.forbidden_nodes, piece)
             # Initialize and grow list of graph nodes being generated
             if not self.parent:
                 Graph.t0_ls=[]   
@@ -170,7 +174,7 @@ def move(positions, occupied_spaces=None):
             p1= x_inv[p[0]]+str(p[1])
             return p1
 
-    def generate_moves(p, forbidden, piece='knight'):
+    def generate_moves(p, forbidden, piece):
         """
         Defines every possible move for specified chess piece
          on chess board at position p, given constraints in forbidden positions.
@@ -190,22 +194,16 @@ def move(positions, occupied_spaces=None):
         # TODO: Write rules for other chess pieces: queen, king, bishop, rook, pawn.
         #         Note: special moves not currently configured without additional parameters (e.g. en passant).
 
-        if piece in {'queen', 'king', 'bishop', 'knight', 'rook' 'pawn'}:
+        x, y = p[0], p[1]
 
-            x, y = p[0], p[1]
+        if piece=='knight':
 
-            if piece=='knight':
-
-                moves=[(x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) for i in range(2) for j in range(2) for k in range(2) \
-                        if x+(2**k)*(-1)**i > 0 and x+(2**k)*(-1)**i <= 8 and y+(2**abs(k-1))*(-1)**j <= 8 \
-                        and y+(2**abs(k-1))*(-1)**j > 0 and (x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) not in forbidden]
-                
-                moves.sort()
-                return moves
-            
-        else:
-            return None
-        
+            moves=[(x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) for i in range(2) for j in range(2) for k in range(2) \
+                    if x+(2**k)*(-1)**i > 0 and x+(2**k)*(-1)**i <= 8 and y+(2**abs(k-1))*(-1)**j <= 8 \
+                    and y+(2**abs(k-1))*(-1)**j > 0 and (x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) not in forbidden]
+             
+            moves.sort()
+            return moves
         
     error0=' Error: Invalid input! Please input start and stop points in chess notation, separated by space. (e.g.\'A1 B2\')'
     error1=' Error: Specified position(s) out of bounds!'
@@ -227,25 +225,46 @@ def move(positions, occupied_spaces=None):
         occupied_spaces_start={(1,7),(2,7),(3,7),(4,7),(5,7),(6,7),(7,7),(8,7),\
                                (1,8),(2,8),(3,8),(4,8),(5,8),(6,8),(7,8),(8,8)}
         occupied_spaces_t=occupied_spaces_start.copy()
+
+    # Possible chess pieces.
+    pieces = {'queen', 'king', 'bishop', 'knight', 'rook' 'pawn'}
    
     # Clean user input & raise error if invalid input.
-    positions=positions.upper().strip()
+    if type(piece)==str:
+        piece=piece.lower().strip()
+        if piece not in pieces \
+           or piece != 'knight': # Currently only configured for knight
+        # If piece entered not chess piece, return user input error.
+            return error0
+    else:
+        return error0
+    
+    if type(positions)==str:    
+        positions=positions.upper().strip()
+    else:
+        # If string not entered, return user input error.
+        return error0
+
+    # Clean chess notation input and convert into tuple.
     p = tuple(filter(None,re.split('\s|\W|_',positions)))
     if len(p)==2:
         p0, p1 = p
         t_i = chess_to_tup(p0)
         t_f = chess_to_tup(p1)
     else:
+        # Raise user input error if ambiguous start and endpoint.
         return error0
         
     if t_i==0 or t_f==0:
+        # Out of bounds error
         return error1
 
     elif type(t_i)!=tuple or type(t_f)!=tuple:
+        # User input error
         return error0
 
     if t_i in occupied_spaces_t:
-        #Remove current piece from occupied_spaces
+        # Remove current piece from occupied_spaces
         occupied_spaces_t = occupied_spaces_t - set([t_i])
     
     if t_f in occupied_spaces_t:
@@ -264,12 +283,15 @@ def move(positions, occupied_spaces=None):
     mindist_t=Grph.traceback(Graph_df)
     
     mindist_p=[]
+
+
+
     for t in mindist_t:
         # Tuples to chess allocations
         if type(t)==tuple:
             mindist_p.append(chess_to_tup(t,inverse=True))
         else:
-            # Error message formatting
+            # Formatting for error message
             mindist_p=[mindist_t]
     if warning:
         mindist_p.append(warning)
