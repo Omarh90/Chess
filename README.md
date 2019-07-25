@@ -1,8 +1,8 @@
 
-Function: ali.knightsmove(positions, occupied_spaces=None)
+Function: chess.move(positions, occupied_spaces=None, piece='knight')
 
 Calculate the shortest path of a knight on a chess board between two points with chess notation input/output with space delimitation. Apply constraints by listing occupied positions on board. For example, to traverse opposite corners of the board (with no other pieces in the way):
-	>>> ali.knightsmove('A1 H8')
+	>>> chess.move('A1 H8')
 	> 'B3 A5 C4 E5 G6 H8'
 Note that in general there is no unique solution for this type of problem. Consequently, the output given will typically be one of several possible equivalent shortest distances.
 
