@@ -30,9 +30,10 @@ Author:
     Written 7/2019
 """
 
-def move(positions, occupied_spaces=None, piece='knight'):
-    import pandas as pd
-    import re
+import pandas as pd
+import 
+
+def move(positions, occupied_spaces=None, piece='knight'):re
     
     class Graph:
     
