@@ -31,9 +31,9 @@ Author:
 """
 
 import pandas as pd
-import 
+import re
 
-def move(positions, occupied_spaces=None, piece='knight'):re
+def move(positions, occupied_spaces=None, piece='knight'):
     
     class Graph:
     
@@ -82,6 +82,7 @@ def move(positions, occupied_spaces=None, piece='knight'):re
             for t in self.children:
                 t0=Graph(t, Graph.occupied_nodes, self.height+1, self.node)
                 Graph.t0_ls.append(t0)
+
 
         def generate_recur(self):
             # Generate graph recursively
@@ -175,7 +176,7 @@ def move(positions, occupied_spaces=None, piece='knight'):re
             p1= x_inv[p[0]]+str(p[1])
             return p1
 
-    def generate_moves(p, forbidden, piece):
+    def generate_moves(p, forbidden, piece, move_dict={}):
         """
         Defines every possible move for specified chess piece
          on chess board at position p, given constraints in forbidden positions.
@@ -197,14 +198,28 @@ def move(positions, occupied_spaces=None, piece='knight'):re
 
         x, y = p[0], p[1]
 
-        if piece=='knight':
-
-            moves=[(x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) for i in range(2) for j in range(2) for k in range(2) \
-                    if x+(2**k)*(-1)**i > 0 and x+(2**k)*(-1)**i <= 8 and y+(2**abs(k-1))*(-1)**j <= 8 \
-                    and y+(2**abs(k-1))*(-1)**j > 0 and (x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) not in forbidden]
-             
+        # If x,y move already calculated, retrieve values and remove forbidden values
+        if (x,y, piece) in move_dict.keys():
+            moves= list(set(move_dict[(x,y,piece)].values()) - forbidden)
             moves.sort()
             return moves
+        
+        else:
+            if piece=='knight':
+
+                # Calculate all possible moves of knight, including boundaries of chess board
+                moves0=[(x+(2**k)*(-1)**i, y+(2**abs(k-1))*(-1)**j) for i in range(2) for j in range(2) for k in range(2) \
+                        if x+(2**k)*(-1)**i > 0 and x+(2**k)*(-1)**i <= 8 and y+(2**abs(k-1))*(-1)**j <= 8 and y+(2**abs(k-1))*(-1)**j > 0]
+
+                # Memoize calculated values
+                moves0.sort()
+                move_dict[(x, y, piece)] = moves0
+
+                # Remove forbidden pieces from calculated moves
+                moves = list(set(moves0) - forbidden)
+                moves.sort()
+                
+                return moves
         
     error0=' Error: Invalid input! Please input start and stop points in chess notation, separated by space. (e.g.\'A1 B2\')'
     error1=' Error: Specified position(s) out of bounds!'
@@ -228,7 +243,7 @@ def move(positions, occupied_spaces=None, piece='knight'):re
         occupied_spaces_t=occupied_spaces_start.copy()
 
     # Possible chess pieces.
-    pieces = {'queen', 'king', 'bishop', 'knight', 'rook' 'pawn'}
+    pieces = {'queen', 'king', 'bishop', 'knight', 'rook', 'pawn'}
    
     # Clean user input & raise error if invalid input.
     if type(piece)==str:
